@@ -4,12 +4,18 @@
 	</div>
 </template>
 
-<script>
-export default {
-	name: 'app'
+<script lang="ts">
+import Vue from 'Vue'
+import Component from 'vue-class-component'
+
+@Component
+export default class App extends Vue {
+	created () {
+
+	}
 }
 </script>
 
 <style lang="scss">
-    // @import './scss/reset';
+    // @import 'assets/scss/mixin';
 </style>

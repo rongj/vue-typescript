@@ -1,35 +1,15 @@
-// import Vue from 'vue';
-// import VueRouter, { RouteConfig } from 'vue-router';
-// import TodoApp from './components/TodoApp.vue';
-// import { RouteViews } from './models';
+import Vue from 'vue'
 
-// const viewNames = ['completed', 'active', '*'];
-// const routes = viewNames.map((view): RouteConfig => ({
-//     path: '/' + view,
-//     component: TodoApp,
-//     props: {
-//         currentView: view === '*' ? 'all' : view,
-//     },
-// }));
 
-// const router = new VueRouter({
-//     routes,
-// });
+import App from './App.vue'
+import router from './router/index'
 
-// Vue.use(VueRouter);
-// const app = new Vue({
-//     el: '#app',
-//     template: '<router-view></router-view>',
-//     router,
-//     mixins: [VueRouter],
-// });
+import '@/assets/scss/reset.scss'
 
-import Vue from 'vue';
-import App from './App.vue';
-import router from './router/index';
-
-const app = new Vue({
+const app: Vue = new Vue({
     el: '#app',
     router,
     render: h => h(App)
-});
+})
+
+export default app
