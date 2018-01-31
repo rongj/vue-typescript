@@ -7,13 +7,16 @@ Vue.use(Router)
 
 export default new Router({
     mode: 'hash',
-    routes: [{
-        path: '/',
-        component: index,
-        name: 'index'
-    },{
-        path: '/detail',
-        component: detail,
-        name: 'detail'
-    }]
+    routes: [
+        {
+            path: '/',
+            component: index,
+            name: 'index'
+        },
+        {
+            path: '/detail/:id/:type',
+            component: detail,
+            name: 'detail'
+        }
+    ]
 })

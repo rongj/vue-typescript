@@ -26,15 +26,47 @@
 
 	    <div class="phone-body">
 	    	<div class="list-wrap">
-				{{ 13213 | num}}
 				<div class="mop-index-list">
-					<div class="spinner">
-						<div class="bounce1"></div>
-						<div class="bounce2"></div>
-						<div class="bounce3"></div>
-					</div>
-					<div class="nomore-data">没有更多数据啦！</div>
+					<template v-for="(item,i) in listdata">
+						<div class="mop-index-item" :class="{'single-img':item.imgjs && JSON.parse(item.imgjs) &&　JSON.parse(item.imgjs).length < 3 && !item.videojs, 'video-item': item.videojs}" :key="i">
+							  <router-link :to="{name: 'detail', params: {id: item.articleid, type: item.platelv001id.substr(0,1) === '2' ? 'tt' : 'dzh'}}" class="post-content"> 
+							<!--<router-link :href="`//m${item.platelv001id.substr(0,1) == '2' ? 'tt' : 'dzh'}.mop.com/a/${item.htmlname}?fr=${item.platelv001id}&level=index|${item.platelv001id.substr(0,1) == '2' ? 'tt' : 'dzh'}|${item.platelv001id}|${item.platelv002id}|${Math.floor(i/pagesize)}|${i%pagesize}`" class="post-content">-->
+								<h2>{{item.title}}</h2>
+								<div class="post-img img-preview" v-if="item.imgjs && JSON.parse(item.imgjs) &&　JSON.parse(item.imgjs).length < 3 && !item.videojs">
+									<div class="img-wrap">
+										<img :src="JSON.parse(item.imgjs)[0].src" alt="">
+									</div>
+								</div>
+								<div class="post-imgs img-preview" v-if="item.imgjs && JSON.parse(item.imgjs) &&　JSON.parse(item.imgjs).length > 2">
+									<div class="img-wrap" v-for="(img,i) in item.imgjs && JSON.parse(item.imgjs).slice(0,3)" :key="i">
+										<img :src="img.src+'?x-oss-process=style/mop2_3'" alt="">
+									</div>
+								</div>
+								<div class="post-video img-preview" v-if="item.videojs">
+									<img :src="JSON.parse(item.imgjs)[0].src" alt="">
+									<i></i>
+									<span>{{ item.videojs && JSON.parse(item.videojs) && JSON.parse(item.videojs)[0].videoTime| formatDuration}}</span>
+								</div>
+							</router-link>
+							<div class="post-info clearfix">
+								<a :href="`//m.mop.com/space.html?userid=${item.userid}`" class="post-man fl">
+									<img :src="'//i1.mopimg.cn/head/'+item.userid+'/80x80'" :alt="item.username">
+									<span>{{item.username}}</span>
+								</a>
+								<div class="post-count fr">
+									<span class="post-view"><i></i>{{item.readnum | num}}</span>
+									<span class="post-reply" v-if="item.replynum>0"><i></i>{{item.replynum}}</span>
+								</div>
+							</div>
+						</div>
+					</template>
 				</div>
+				<div class="spinner" v-if="!loadingFlag && !nodata">
+					<div class="bounce1"></div>
+					<div class="bounce2"></div>
+					<div class="bounce3"></div>
+				</div>
+				<div class="nomore-data" v-if="nodata">没有更多数据啦！</div>
 	    	</div>
 	    </div>
 	</div>
@@ -43,53 +75,183 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Route } from 'vue-router'
-import { mopPlate, allPlates, recommendPlates } from '../utils/plate'
+import { allPlates, recommendPlates } from '../utils/plate'
 
+import $ from 'webpack-zepto'
+
+import * as config from '../api/config'
 import * as api from '../api/service'
+import * as Global from '../utils/global'
 
 interface PlateItem {
 	plateId: number,
 	plateName: string,
+	colid: string,
 	plateSource?: number | string,
 	plateImage?: string,
 	plateDesc?: string,
 	follow?: boolean
 }
 
+interface TabStyle {
+	width?: string | number,
+	left?: string | number,
+	scrollLeft?: string | number,
+}
+
 @Component
 export default class Index extends Vue {
     private subscribePlate: PlateItem[] = []
 	private activeIndex: number = 0
+	private tabStyle: TabStyle = {}
+	private listdata: StoreState.FlowList[] = []
+	private loadingFlag: boolean = true
+	private nodata: boolean = false
+	private pgnum: number = 0
+	private pageSize:number = 20
+	private colid: string = '999999'
+	private startcol: string = 'null'
+	private mirrorid: string = 'null'
 	
 	private created (): void {
-		api.getRecommendList({subjectId: 7274201}).then(res => {
-			console.log(res);
-		})
 		this.subscribePlate = recommendPlates
 	}
 	
     private mounted (): void {
-		// console.log(this.$route);
+		this.scrollTab(this.activeIndex > this.subscribePlate.length ? 0 : this.activeIndex);
     }
 
+	/* 路由变化 */
 	@Watch('$route', { immediate: true })
 	private routeChange (val: Route, oldVal: Route): void {
-		console.log('val1111111111')
 	}
 
+	/* 索引变化 */
 	@Watch('activeIndex', { immediate: true })
 	private activeIndexChange (val:number, oldVal: number): void {
-		console.log(val)
 	}
 	
+	/* tab选择 */
 	private handleTab (item: PlateItem[], index: number, e: any): void {
-		this.activeIndex = index
+		this.scrollTab(index)
+	}
+	
+	/* 选项卡 */
+	private scrollTab (i: number): void {
+		this.activeIndex = i
+		const $p = $(".tabs-nav-items"),
+			$nav = $p.find('span').eq(i),
+			w = $nav.width(),
+			ol = $nav[0].offsetLeft,
+			$line = $('.tabs-line'),
+			ow = w/2 + ol - $p.width()/2,
+			sl = ow > 0 ? ow : 0
+
+		$line.css({
+			width: w,
+			left: ol
+		})
+		$p.scrollLeft(sl)
+		
+		this.recordPlateList()
+		this.recordPlatePos()
+		// this.tabStyle = {
+		// 	width: w,
+		// 	left: ol,
+		// 	scrollLeft: sl
+		// }
+	}
+
+	/* 记录板块列表信息 */
+	private recordPlateList (): void {
+		const plate: PlateItem = this.subscribePlate[this.activeIndex]
+		const id = plate.plateId;
+		this.colid = plate.colid;
+		if(sessionStorage.getItem('list'+id)) {
+			const d: any = JSON.parse((sessionStorage as any).getItem('list'+id))
+			this.pgnum = d.pgnum;
+			if (d.listdata &&　d.listdata.length) {
+				this.listdata = d.listdata;
+				this.startcol = d.startcol;
+				this.mirrorid = d.mirrorid;
+			} else {
+				this.getListData(id);
+			}
+		} else {
+			this.listdata = [];
+			this.startcol = 'null';
+			this.mirrorid = 'null';
+			this.pgnum = 0;
+			this.getListData(id);
+		}
+	}
+	
+	/**
+	 * 获取列表数据
+	 * @param id { string } 版块plateId
+	 */
+	private getListData (id?: number) :void {
+		let _this = this;
+		_this.loadingFlag = false;
+		api.getDataList({
+			colid: this.colid,
+			serialnum: 300000,
+			platform: 'wap',
+			qid: config.qid,
+			uid: config.uid,
+			pgnum: this.pgnum,
+			pageSize: this.pageSize,
+			startcol: this.startcol,
+			mirrorid: this.mirrorid,
+		}).then(res => {
+			if(res.data.length) {
+				_this.loadingFlag = true
+				if (id !== _this.subscribePlate[_this.activeIndex].plateId) return 
+				_this.nodata = false
+				_this.listdata = _this.listdata.concat(res.data)
+				_this.startcol = res.data[res.data.length-1].startcol
+				_this.mirrorid = res.mirrorid
+				sessionStorage.setItem('list'+_this.subscribePlate[_this.activeIndex].plateId, JSON.stringify({
+					id: _this.subscribePlate[_this.activeIndex].plateId,
+					pgnum: _this.pgnum,
+					colid: _this.colid,
+					startcol: _this.startcol,
+					mirrorid: _this.mirrorid,
+					listdata: _this.listdata
+				}))
+			}
+		})
+	}
+
+	/* 记录板块滚动信息 */
+	private recordPlatePos (): void {
+		const id = this.subscribePlate[this.activeIndex].plateId,
+			scrollTop = sessionStorage.getItem('scrollTop'+id);
+		const q: any = document.body;
+		if (scrollTop) {
+			this.$nextTick( () => 
+				q.scrollTop = scrollTop
+			);
+		}
+		window.addEventListener('scroll', () => {
+			const id = this.subscribePlate[this.activeIndex].plateId;
+			if (q.scrollTop > 0) {
+				sessionStorage.setItem('scrollTop' + id, q.scrollTop);
+			}
+			if (q.scrollTop + document.documentElement.clientHeight + 200 > q.offsetHeight && this.loadingFlag && q.scrollTop > 0) {
+				this.loadingFlag = false;
+				++this.pgnum;
+				this.getListData(id);
+			}
+		}, false)
 	}
 }
 </script>
 
 <style lang="scss">
 	@import '../assets/scss/mixin';
+	@import '../assets/scss/list';
+	@import '../assets/scss/spinner';
 
 	/* 顶部 */
 	.mop-header {
@@ -208,14 +370,14 @@ export default class Index extends Vue {
 				color: #888888;
 				font-size: 0.28rem;
 				&.active{
-					color: #333;
+					color: $mc;
 				}
 			}
 			.tabs-line{
 				display: block;
 				width: 0.96rem;
 				height: 3px;
-				background: #da3b38;
+				background: $mc;
 				position: absolute;
 				left: 0;
 				border-radius: 3px;

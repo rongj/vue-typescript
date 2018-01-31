@@ -1,0 +1,69 @@
+.postman {
+    width: 100%;
+    margin: 0.1rem 0;
+    .postman-avator {
+        float: left;
+        overflow: hidden;
+        border-radius: 50%;
+        width: 0.6rem;
+        height: 0.6rem;
+        margin-top: 0.04rem;
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+    .postman-info {
+        float: left;
+        margin-left: 0.12rem;
+    }
+    .postman-identity {
+        >* {
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 0.4rem;
+            margin-right: 0.04rem;
+        }
+        h2 {
+            font-size: 0.26rem;
+            color: #333;
+        }
+        .lz {
+            background: #fff5dc;
+            color: #9a7e3a;
+            border: 1px solid #ffd057;
+            font-size: 0.2rem;
+            padding: 0 0.12rem;
+            border-radius: 4px;
+            height: 0.32rem;
+            line-height: 0.32rem;
+        }
+        .grade {
+            background: #dae4ff;
+            color: #9b92f5;
+            border: 1px solid #b4bcfb;
+            font-size: 0.2rem;
+            padding: 0 0.12rem;
+            border-radius: 4px;
+            line-height: 0.32rem;
+            height: 0.32rem;
+        }
+        .gender {
+            width: 0.32rem;
+            height: 0.32rem;
+            &.man {
+                background: url(../assets/images/male.png) no-repeat 50% 50% / auto 100%;
+            }
+            &.woman {
+                background: url(../assets/images/female.png) no-repeat 50% 50% / auto 100%;
+            }
+        }
+    }
+    .post-time {
+        color: #888;
+        font-size: 0.22rem;
+        span {
+            margin-right: 0.16rem;
+        }
+    }
+}

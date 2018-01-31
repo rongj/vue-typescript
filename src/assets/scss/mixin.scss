@@ -14,3 +14,33 @@ $th: 0.8rem;
     font-size: $s;
     font-weight: $b;
 }
+
+
+/**
+ * 多行文本溢出省略号
+ * @param  {[type]} $linenum:0 [description]
+ * @return {[type]}              [description]
+ */
+
+@mixin multiline-ellipsis($lineclamp: 1) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    display: box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lineclamp;
+}
+
+
+/**
+ * 单行文本溢出省略号
+ * @param  {[type]} $substract:0 `$substract`单位为%
+ * @return {[type]}              [description]
+ */
+
+.singleline-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
